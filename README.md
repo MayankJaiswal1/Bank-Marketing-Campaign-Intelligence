@@ -72,7 +72,7 @@ Class imbalance (89/11) handled via `class_weight='balanced'` rather than oversa
 
 ```bash
 # clone and install
-git clone  https://github.com/MayankJaiswal1/Bank-Marketing-Campaign-Intelligence/
+git clone   https://github.com/MayankJaiswal1/Bank-Marketing-Campaign-Intelligence.git
 cd termledger
 pip install pandas numpy scikit-learn matplotlib seaborn jupyter
 
