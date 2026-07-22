@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Marketing Campaign — Analytics Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F3EC;
+    --paper-dim:#EEE9DD;
+    --ink:#16302B;
+    --ink-soft:#4B5E58;
+    --teal:#2F6B5E;
+    --teal-deep:#1E4740;
+    --gold:#B8863B;
+    --gold-soft:#E4C793;
+    --grey:#8C8577;
+    --line:#D9D2C2;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    color:var(--ink);
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:var(--teal-deep);}
+
+  /* ---------- Layout shell ---------- */
+  .shell{display:grid;grid-template-columns:200px 1fr;min-height:100vh;}
+  @media (max-width:860px){ .shell{grid-template-columns:1fr;} .rail{display:none;} }
+
+  .rail{
+    position:sticky; top:0; height:100vh; padding:36px 0 36px 32px;
+    border-right:1px solid var(--line);
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .rail-top .mark{font-family:'Fraunces',serif; font-weight:700; font-size:15px; letter-spacing:0.02em; color:var(--teal-deep);}
+  .rail-top .mark span{color:var(--gold);}
+  nav.section-nav{margin-top:48px; display:flex; flex-direction:column; gap:4px;}
+  nav.section-nav a{
+    text-decoration:none; color:var(--ink-soft); font-size:13px; padding:9px 0;
+    border-left:2px solid transparent; padding-left:14px; transition:all .15s ease;
+  }
+  nav.section-nav a:hover{ color:var(--ink); border-left-color:var(--gold-soft); }
+  nav.section-nav a.active{ color:var(--ink); border-left-color:var(--gold); font-weight:600; }
+  .rail-bottom{font-size:11px; color:var(--grey); line-height:1.6;}
+
+  main{padding:0;}
+  .section{padding:72px 56px; max-width:1100px;}
+  @media (max-width:860px){ .section{padding:48px 24px;} }
+  .section + .section{border-top:1px solid var(--line);}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--gold); margin-bottom:10px;
+  }
+  .section h2{font-size:30px; margin:0 0 6px 0;}
+  .section p.lede{color:var(--ink-soft); font-size:15px; max-width:640px; margin:0 0 32px 0; line-height:1.6;}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:64px 56px 48px 56px;}
+  @media (max-width:860px){ .hero{padding:40px 24px;} }
+  .hero h1{font-size:44px; line-height:1.08; margin:0 0 16px 0; max-width:680px;}
+  .hero .sub{font-size:16px; color:var(--ink-soft); max-width:560px; line-height:1.65; margin-bottom:40px;}
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media (max-width:700px){ .kpi-row{grid-template-columns:1fr 1fr;} }
+  .kpi{background:var(--white); padding:22px 20px;}
+  .kpi .num{font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:600; color:var(--teal-deep);}
+  .kpi .num.gold{color:var(--gold);}
+  .kpi .lbl{font-size:12px; color:var(--ink-soft); margin-top:6px;}
+
+  /* ---------- Cards / charts ---------- */
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:28px;}
+  @media (max-width:860px){ .grid-2{grid-template-columns:1fr;} }
+  .card{background:var(--white); border:1px solid var(--line); padding:24px 24px 18px 24px;}
+  .card h3{font-size:15px; margin:0 0 4px 0; font-weight:600;}
+  .card .note{font-size:12px; color:var(--grey); margin-bottom:16px;}
+  .barchart{display:flex; flex-direction:column; gap:8px;}
+  .bar-row{display:grid; grid-template-columns:110px 1fr 52px; align-items:center; gap:10px; font-size:12.5px;}
+  .bar-row .lab{color:var(--ink-soft); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .bar-track{background:var(--paper-dim); height:14px; position:relative; border-radius:1px;}
+  .bar-fill{background:var(--teal); height:100%; border-radius:1px; transition:width .5s ease;}
+  .bar-fill.gold{background:var(--gold);}
+  .bar-val{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink);}
+
+  .toggle-row{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
+  .toggle{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; padding:6px 12px; border:1px solid var(--line);
+    background:var(--white); color:var(--ink-soft); cursor:pointer; border-radius:2px; transition:.15s;
+  }
+  .toggle.active{background:var(--teal-deep); color:var(--white); border-color:var(--teal-deep);}
+
+  /* ---------- Model section ---------- */
+  .model-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:28px;}
+  @media (max-width:860px){ .model-grid{grid-template-columns:1fr;} }
+  table.metrics{width:100%; border-collapse:collapse; font-size:13px;}
+  table.metrics th{
+    background:var(--teal-deep); color:var(--white); text-align:left; padding:10px 12px; font-weight:500;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.03em;
+  }
+  table.metrics td{padding:10px 12px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono',monospace;}
+  table.metrics tr:last-child td{font-weight:600; background:var(--paper-dim);}
+
+  .cm-wrap{display:flex; justify-content:center; margin-top:8px;}
+  .cm-block{display:flex; flex-direction:column; align-items:center;}
+  .cm-axis-top{display:grid; grid-template-columns:80px 76px 76px; gap:3px; margin-bottom:3px;}
+  .cm-axis-top .corner{}
+  .cm-axis-top .col-lab{font-size:10px; color:var(--grey); text-align:center; align-self:end; padding-bottom:2px;}
+  .cm-row{display:grid; grid-template-columns:80px 76px 76px; gap:3px; align-items:stretch;}
+  .cm-row + .cm-row{margin-top:3px;}
+  .cm-row-lab{font-size:10px; color:var(--grey); display:flex; align-items:center; justify-content:flex-end; text-align:right; padding-right:8px;}
+  .cm-cell{height:64px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace;}
+  .cm-cell.tn{background:#E3EEEA;} .cm-cell.tp{background:var(--teal); color:#fff;}
+  .cm-cell.fp,.cm-cell.fn{background:var(--paper-dim); color:var(--ink-soft);}
+  .cm-cell .n{font-size:16px; font-weight:600;}
+  .cm-cell .cm-cell-lab{font-size:10px; margin-top:2px;}
+  .cm-label{font-size:10px; color:var(--grey); text-align:center;}
+
+  svg.roc{width:100%; height:auto; overflow:visible;}
+
+  /* ---------- Simulator ---------- */
+  .sim{background:var(--teal-deep); color:var(--paper); padding:40px; }
+  .sim h2{color:var(--paper);}
+  .sim .eyebrow{color:var(--gold-soft);}
+  .sim p.lede{color:#C9D6D1;}
+  .sim-body{display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:8px;}
+  @media (max-width:860px){ .sim-body{grid-template-columns:1fr;} }
+  .sim-controls label{display:block; font-size:13px; margin-bottom:8px; color:#C9D6D1;}
+  .sim-controls .row{margin-bottom:28px;}
+  .sim-controls input[type=range]{width:100%; accent-color:var(--gold);}
+  .sim-controls .valline{display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:16px; color:var(--gold-soft); margin-top:4px;}
+  .sim-results{background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); padding:24px;}
+  .sim-results .line{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1); font-size:13px;}
+  .sim-results .line:last-child{border-bottom:none;}
+  .sim-results .line .v{font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:600;}
+  .sim-results .line.hero-line .v{color:var(--gold-soft); font-size:22px;}
+  .sim-note{font-size:11.5px; color:#9FB3AC; margin-top:16px; line-height:1.6;}
+
+  /* ---------- Recommendations ---------- */
+  .reco-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0;}
+  .reco-list li{
+    display:grid; grid-template-columns:36px 1fr; gap:18px; padding:20px 0; border-bottom:1px solid var(--line);
+  }
+  .reco-list li:first-child{border-top:1px solid var(--line);}
+  .reco-num{font-family:'IBM Plex Mono',monospace; color:var(--gold); font-size:14px; padding-top:2px;}
+  .reco-list h4{margin:0 0 4px 0; font-size:15px; font-weight:600;}
+  .reco-list p{margin:0; font-size:13.5px; color:var(--ink-soft); line-height:1.6;}
+
+  footer{padding:32px 56px; font-size:11.5px; color:var(--grey); border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="rail">
+    <div class="rail-top">
+      <div class="mark">LEDGER<span>·</span>01</div>
+      <nav class="section-nav" id="sectionNav">
+        <a href="#overview">Overview</a>
+        <a href="#segments">Segments</a>
+        <a href="#timing">Timing</a>
+        <a href="#history">Campaign History</a>
+        <a href="#model">Model</a>
+        <a href="#simulator">Call Simulator</a>
+        <a href="#recommendations">Recommendations</a>
+      </nav>
+    </div>
+    <div class="rail-bottom">
+      UCI Bank Marketing<br>
+      41,188 records<br>
+      Prepared by Mayank Jaiswal
+    </div>
+  </aside>
+
+  <main>
+    <section class="hero" id="overview">
+      <div class="eyebrow">Term Deposit Campaign — Analytics Ledger</div>
+      <h1>Reading the campaign like a ledger: who answered, when, and why.</h1>
+      <p class="sub">An interactive review of 41,188 client contacts from a bank's term-deposit phone campaign — built to turn raw call records into a working call-prioritization decision.</p>
+      <div class="kpi-row">
+        <div class="kpi"><div class="num" id="kpiTotal">—</div><div class="lbl">Clients contacted</div></div>
+        <div class="kpi"><div class="num gold" id="kpiRate">—</div><div class="lbl">Subscribed to term deposit</div></div>
+        <div class="kpi"><div class="num" id="kpiAuc">—</div><div class="lbl">Best model ROC-AUC</div></div>
+        <div class="kpi"><div class="num" id="kpiRecall">—</div><div class="lbl">Subscribers the model catches</div></div>
+      </div>
+    </section>
+
+    <section class="section" id="segments">
+      <div class="eyebrow">Section 01</div>
+      <h2>Who subscribes</h2>
+      <p class="lede">Subscription rate varies far more by occupation and education than the overall 11.3% average suggests. Toggle between attributes to compare.</p>
+      <div class="toggle-row" id="segToggle">
+        <button class="toggle active" data-seg="by_job">Job</button>
+        <button class="toggle" data-seg="by_education">Education</button>
+        <button class="toggle" data-seg="by_marital">Marital status</button>
+        <button class="toggle" data-seg="by_contact">Contact type</button>
+        <button class="toggle" data-seg="by_age_group">Age group</button>
+      </div>
+      <div class="card">
+        <h3 id="segTitle">Subscription rate by job</h3>
+        <div class="note">Rate = share of clients in that group who subscribed. Sorted highest to lowest.</div>
+        <div class="barchart" id="segChart"></div>
+      </div>
+    </section>
+
+    <section class="section" id="timing">
+      <div class="eyebrow">Section 02</div>
+      <h2>When it works</h2>
+      <p class="lede">Contact month matters more than day of week. The campaign's highest-volume months convert at the lowest rates.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Subscription rate by month</h3>
+          <div class="note">Bar width = contact volume; color intensity = conversion rate.</div>
+          <div class="barchart" id="monthChart"></div>
+        </div>
+        <div class="card">
+          <h3>Subscription rate by day of week</h3>
+          <div class="note">Contacts are fairly even across weekdays; conversion is too.</div>
+          <div class="barchart" id="dayChart"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="history">
+      <div class="eyebrow">Section 03</div>
+      <h2>The warm list beats the cold list</h2>
+      <p class="lede">Prior contact — and especially prior success — is the single clearest behavioral signal in the whole dataset.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Previously contacted?</h3>
+          <div class="note">Repeat contacts convert nearly 7× more often than first-time contacts.</div>
+          <div class="barchart" id="prevChart"></div>
+        </div>
+        <div class="card">
+          <h3>Prior campaign outcome</h3>
+          <div class="note">A prior success predicts a current success far more than a blank history.</div>
+          <div class="barchart" id="poutcomeChart"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="model">
+      <div class="eyebrow">Section 04</div>
+      <h2>Scoring the next call</h2>
+      <p class="lede">Two models were trained to predict subscription <em>before</em> a call happens — call duration was deliberately excluded, since it's only known after the call ends and would leak the outcome.</p>
+      <div class="model-grid">
+        <div class="card">
+          <h3>Held-out test performance</h3>
+          <div class="note">8,238 clients held out, 928 (11.3%) subscribed. Precision/recall computed on the "yes" class.</div>
+          <table class="metrics" id="metricsTable"></table>
+          <div class="cm-wrap" id="cmWrap"></div>
+        </div>
+        <div class="card">
+          <h3>ROC curve &amp; feature importance</h3>
+          <div class="note">Random Forest (gold) edges out Logistic Regression (teal) across the curve.</div>
+          <svg class="roc" viewBox="0 0 280 240" id="rocSvg"></svg>
+          <div class="barchart" id="featChart" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sim" id="simulator">
+      <div class="eyebrow">Section 05 — Signature Tool</div>
+      <h2>The call-prioritization simulator</h2>
+      <p class="lede">The model's confusion matrix only becomes a business decision once it's weighed against real costs. Set the cost of a call and the value of a conversion — the ledger below recalculates live from the Random Forest's actual test-set outcomes.</p>
+      <div class="sim-body">
+        <div class="sim-controls">
+          <div class="row">
+            <label>Cost per call made</label>
+            <input type="range" id="costSlider" min="1" max="50" value="8" step="1">
+            <div class="valline"><span>Cost / call</span><span id="costVal" class="mono">₹8</span></div>
+          </div>
+          <div class="row">
+            <label>Value per successful conversion</label>
+            <input type="range" id="valueSlider" min="500" max="15000" value="4000" step="100">
+            <div class="valline"><span>Value / conversion</span><span id="valueVal" class="mono">₹4,000</span></div>
+          </div>
+          <div class="row">
+            <label>Call-everyone baseline vs. model-guided calling</label>
+            <div class="valline" style="color:#C9D6D1;"><span>Model used</span><span class="mono">Random Forest</span></div>
+          </div>
+        </div>
+        <div class="sim-results">
+          <div class="line"><span>Calls made (call-everyone)</span><span class="v mono" id="simCallsAll">—</span></div>
+          <div class="line"><span>Conversions (call-everyone)</span><span class="v mono" id="simConvAll">—</span></div>
+          <div class="line"><span>Net value — call everyone</span><span class="v mono" id="simNetAll">—</span></div>
+          <div class="line"><span>Calls made (model-flagged only)</span><span class="v mono" id="simCallsModel">—</span></div>
+          <div class="line"><span>Conversions caught</span><span class="v mono" id="simConvModel">—</span></div>
+          <div class="line hero-line"><span>Net value — model-guided</span><span class="v mono" id="simNetModel">—</span></div>
+        </div>
+      </div>
+      <div class="sim-note">Figures are scaled from the 8,238-client held-out test set (contains 928 true subscribers) using the Random Forest's actual predictions: 591 true positives, 818 false positives, 337 missed subscribers. This is a planning illustration, not a guaranteed campaign outcome.</div>
+    </section>
+
+    <section class="section" id="recommendations">
+      <div class="eyebrow">Section 06</div>
+      <h2>What to do with this</h2>
+      <ul class="reco-list">
+        <li>
+          <div class="reco-num">01</div>
+          <div><h4>Re-engage before you cold-call</h4><p>Clients with a successful prior campaign convert at 65%, versus 8.8% with no history. Build and maintain a warm-lead list rather than defaulting to fresh contacts.</p></div>
+        </li>
+        <li>
+          <div class="reco-num">02</div>
+          <div><h4>Shift volume out of May–August</h4><p>March, September, October, and December convert 4–5× higher than the high-volume summer months. Reallocate calling capacity toward the shoulder months where feasible.</p></div>
+        </li>
+        <li>
+          <div class="reco-num">03</div>
+          <div><h4>Weight outreach toward students, retirees, and 66+ clients</h4><p>These segments convert at 2–4× the blue-collar/services baseline. They warrant tailored scripts, not just tailored targeting.</p></div>
+        </li>
+        <li>
+          <div class="reco-num">04</div>
+          <div><h4>Track the macro backdrop, not just the client list</h4><p>Euribor rate, employment level, and employment variation are the three strongest predictors in the model — stronger than any single client attribute. Campaign timing relative to the rate cycle deserves its own review.</p></div>
+        </li>
+        <li>
+          <div class="reco-num">05</div>
+          <div><h4>Use the model to rank, not to gatekeep</h4><p>At 42% precision / 64% recall, the Random Forest is a prioritization tool for a call list — not a filter that should exclude anyone outright.</p></div>
+        </li>
+      </ul>
+    </section>
+
+    <footer>
+      Bank Marketing Campaign Analytics — built on the UCI Bank Marketing dataset (41,188 records, no missing values). Modeling excludes call duration to avoid outcome leakage.
+    </footer>
+  </main>
+</div>
+
+<script>
+const DATA = {"total_clients":41188,"overall_rate":11.27,"target_dist":[{"label":"no","count":36548},{"label":"yes","count":4640}],"by_job":[{"job":"student","rate":31.43,"count":875},{"job":"retired","rate":25.23,"count":1720},{"job":"unemployed","rate":14.2,"count":1014},{"job":"admin.","rate":12.97,"count":10422},{"job":"management","rate":11.22,"count":2924},{"job":"unknown","rate":11.21,"count":330},{"job":"technician","rate":10.83,"count":6743},{"job":"self-employed","rate":10.49,"count":1421},{"job":"housemaid","rate":10.0,"count":1060},{"job":"entrepreneur","rate":8.52,"count":1456},{"job":"services","rate":8.14,"count":3969},{"job":"blue-collar","rate":6.89,"count":9254}],"by_education":[{"education":"illiterate","rate":22.22,"count":18},{"education":"unknown","rate":14.5,"count":1731},{"education":"university.degree","rate":13.72,"count":12168},{"education":"professional.course","rate":11.35,"count":5243},{"education":"high.school","rate":10.84,"count":9515},{"education":"basic.4y","rate":10.25,"count":4176},{"education":"basic.6y","rate":8.2,"count":2292},{"education":"basic.9y","rate":7.82,"count":6045}],"by_marital":[{"marital":"unknown","rate":15.0,"count":80},{"marital":"single","rate":14.0,"count":11568},{"marital":"divorced","rate":10.32,"count":4612},{"marital":"married","rate":10.16,"count":24928}],"by_contact":[{"contact":"cellular","rate":14.74,"count":26144},{"contact":"telephone","rate":5.23,"count":15044}],"by_month":[{"month":"mar","rate":50.55,"count":546},{"month":"apr","rate":20.48,"count":2632},{"month":"may","rate":6.43,"count":13769},{"month":"jun","rate":10.51,"count":5318},{"month":"jul","rate":9.05,"count":7174},{"month":"aug","rate":10.6,"count":6178},{"month":"sep","rate":44.91,"count":570},{"month":"oct","rate":43.87,"count":718},{"month":"nov","rate":10.14,"count":4101},{"month":"dec","rate":48.9,"count":182}],"by_day":[{"day_of_week":"mon","rate":9.95,"count":8514},{"day_of_week":"tue","rate":11.78,"count":8090},{"day_of_week":"wed","rate":11.67,"count":8134},{"day_of_week":"thu","rate":12.12,"count":8623},{"day_of_week":"fri","rate":10.81,"count":7827}],"by_age_group":[{"age_group":"18-25","rate":20.89,"count":1661},{"age_group":"26-35","rate":11.72,"count":14847},{"age_group":"36-45","rate":8.51,"count":12844},{"age_group":"46-55","rate":8.69,"count":8249},{"age_group":"56-65","rate":15.22,"count":2963},{"age_group":"66+","rate":46.85,"count":619}],"by_prev_contacted":[{"was_previously_contacted":"No","rate":9.26,"count":39673},{"was_previously_contacted":"Yes","rate":63.83,"count":1515}],"by_poutcome":[{"poutcome":"success","rate":65.11,"count":1373},{"poutcome":"failure","rate":14.23,"count":4252},{"poutcome":"nonexistent","rate":8.83,"count":35563}],"metrics":{"logreg":{"precision":0.368,"recall":0.645,"f1":0.469,"accuracy":0.835,"auc":0.801},"rf":{"precision":0.419,"recall":0.637,"f1":0.506,"accuracy":0.86,"auc":0.814}},"confusion":{"logreg":{"tn":6281,"fp":1029,"fn":329,"tp":599},"rf":{"tn":6492,"fp":818,"fn":337,"tp":591}},"test_size":8238,"test_positive":928,"roc":{"logreg":[{"fpr":0.0,"tpr":0.0},{"fpr":0.0025,"tpr":0.0539},{"fpr":0.0045,"tpr":0.1078},{"fpr":0.0068,"tpr":0.1541},{"fpr":0.0098,"tpr":0.2058},{"fpr":0.0138,"tpr":0.2295},{"fpr":0.0176,"tpr":0.2468},{"fpr":0.0215,"tpr":0.2651},{"fpr":0.0241,"tpr":0.2899},{"fpr":0.0294,"tpr":0.3136},{"fpr":0.0326,"tpr":0.333},{"fpr":0.0365,"tpr":0.3502},{"fpr":0.0401,"tpr":0.3728},{"fpr":0.0431,"tpr":0.3955},{"fpr":0.0471,"tpr":0.4149},{"fpr":0.0518,"tpr":0.4332},{"fpr":0.0562,"tpr":0.4569},{"fpr":0.0622,"tpr":0.4763},{"fpr":0.0663,"tpr":0.4925},{"fpr":0.0698,"tpr":0.5086},{"fpr":0.0752,"tpr":0.528},{"fpr":0.0796,"tpr":0.5431},{"fpr":0.0847,"tpr":0.5614},{"fpr":0.0886,"tpr":0.5787},{"fpr":0.0949,"tpr":0.5948},{"fpr":0.103,"tpr":0.6088},{"fpr":0.122,"tpr":0.6272},{"fpr":0.1365,"tpr":0.6412},{"fpr":0.1508,"tpr":0.6541},{"fpr":0.1613,"tpr":0.667},{"fpr":0.1751,"tpr":0.6756},{"fpr":0.1911,"tpr":0.6864},{"fpr":0.2038,"tpr":0.6983},{"fpr":0.2198,"tpr":0.7101},{"fpr":0.2283,"tpr":0.7166},{"fpr":0.2487,"tpr":0.7328},{"fpr":0.2767,"tpr":0.7435},{"fpr":0.3068,"tpr":0.7532},{"fpr":0.3197,"tpr":0.7651},{"fpr":0.3524,"tpr":0.7759},{"fpr":0.3737,"tpr":0.7899},{"fpr":0.393,"tpr":0.8006},{"fpr":0.4194,"tpr":0.8125},{"fpr":0.4466,"tpr":0.8211},{"fpr":0.4781,"tpr":0.8308},{"fpr":0.5073,"tpr":0.8394},{"fpr":0.5196,"tpr":0.8513},{"fpr":0.5369,"tpr":0.8599},{"fpr":0.57,"tpr":0.8707},{"fpr":0.622,"tpr":0.8836},{"fpr":0.651,"tpr":0.8955},{"fpr":0.6782,"tpr":0.9062},{"fpr":0.7227,"tpr":0.917},{"fpr":0.7408,"tpr":0.93},{"fpr":0.7953,"tpr":0.9407},{"fpr":0.8368,"tpr":0.9526},{"fpr":0.8653,"tpr":0.9644},{"fpr":0.9015,"tpr":0.9752},{"fpr":0.9627,"tpr":0.9871},{"fpr":1.0,"tpr":1.0}],"rf":[{"fpr":0.0,"tpr":0.0},{"fpr":0.0018,"tpr":0.0603},{"fpr":0.0034,"tpr":0.097},{"fpr":0.0055,"tpr":0.1422},{"fpr":0.0083,"tpr":0.1789},{"fpr":0.0109,"tpr":0.2155},{"fpr":0.014,"tpr":0.2446},{"fpr":0.0174,"tpr":0.278},{"fpr":0.0194,"tpr":0.2974},{"fpr":0.0226,"tpr":0.3147},{"fpr":0.0257,"tpr":0.3319},{"fpr":0.0291,"tpr":0.3524},{"fpr":0.0321,"tpr":0.3825},{"fpr":0.0373,"tpr":0.4138},{"fpr":0.0416,"tpr":0.431},{"fpr":0.0475,"tpr":0.4591},{"fpr":0.0514,"tpr":0.4817},{"fpr":0.0554,"tpr":0.4968},{"fpr":0.0587,"tpr":0.5172},{"fpr":0.0632,"tpr":0.5366},{"fpr":0.0683,"tpr":0.555},{"fpr":0.0744,"tpr":0.5679},{"fpr":0.0804,"tpr":0.5873},{"fpr":0.0885,"tpr":0.6024},{"fpr":0.0944,"tpr":0.6164},{"fpr":0.1051,"tpr":0.6315},{"fpr":0.1238,"tpr":0.6412},{"fpr":0.1347,"tpr":0.6541},{"fpr":0.1486,"tpr":0.6681},{"fpr":0.1643,"tpr":0.68},{"fpr":0.177,"tpr":0.6929},{"fpr":0.1932,"tpr":0.7026},{"fpr":0.2053,"tpr":0.7134},{"fpr":0.2193,"tpr":0.7263},{"fpr":0.2347,"tpr":0.736},{"fpr":0.2471,"tpr":0.7511},{"fpr":0.2669,"tpr":0.7608},{"fpr":0.2975,"tpr":0.7726},{"fpr":0.3304,"tpr":0.7834},{"fpr":0.3581,"tpr":0.792},{"fpr":0.3761,"tpr":0.8039},{"fpr":0.3926,"tpr":0.8179},{"fpr":0.4166,"tpr":0.8265},{"fpr":0.4357,"tpr":0.8351},{"fpr":0.4529,"tpr":0.8427},{"fpr":0.4866,"tpr":0.8524},{"fpr":0.5153,"tpr":0.8599},{"fpr":0.5412,"tpr":0.8685},{"fpr":0.5625,"tpr":0.8793},{"fpr":0.587,"tpr":0.8901},{"fpr":0.6141,"tpr":0.8966},{"fpr":0.6654,"tpr":0.9062},{"fpr":0.7127,"tpr":0.917},{"fpr":0.7445,"tpr":0.9321},{"fpr":0.7739,"tpr":0.9429},{"fpr":0.825,"tpr":0.9558},{"fpr":0.87,"tpr":0.9666},{"fpr":0.9235,"tpr":0.9795},{"fpr":0.9557,"tpr":0.9892},{"fpr":1.0,"tpr":1.0}]},"feature_importance":[{"feature":"Euribor 3-month rate","importance":0.1704},{"feature":"Number employed (economy)","importance":0.1589},{"feature":"Employment variation rate","importance":0.119},{"feature":"Consumer confidence index","importance":0.0587},{"feature":"Consumer price index","importance":0.0562},{"feature":"Days since last contact","importance":0.0466},{"feature":"Prior campaign: success","importance":0.04},{"feature":"Previously contacted","importance":0.0373},{"feature":"Age","importance":0.0337},{"feature":"Contact month: May","importance":0.0269},{"feature":"Contact type: telephone","importance":0.0257},{"feature":"Contacts this campaign","importance":0.0182}]}
+;
+
+function fmtINR(n){
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+// ---------- KPIs ----------
+document.getElementById('kpiTotal').textContent = DATA.total_clients.toLocaleString('en-IN');
+document.getElementById('kpiRate').textContent = DATA.overall_rate + '%';
+const bestAuc = Math.max(DATA.metrics.logreg.auc, DATA.metrics.rf.auc);
+document.getElementById('kpiAuc').textContent = bestAuc.toFixed(3);
+document.getElementById('kpiRecall').textContent = Math.round(DATA.metrics.rf.recall*100) + '%';
+
+// ---------- Generic bar chart renderer ----------
+function renderBars(containerId, rows, opts){
+  opts = opts || {};
+  const labelKey = opts.labelKey, rateKey = opts.rateKey || 'rate', maxRate = opts.maxRate;
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  const maxVal = maxRate || Math.max(...rows.map(r => r[rateKey]));
+  rows.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    const pct = Math.max(2, (r[rateKey]/maxVal)*100);
+    row.innerHTML = `
+      <div class="lab">${r[labelKey]}</div>
+      <div class="bar-track"><div class="bar-fill${opts.gold?' gold':''}" style="width:${pct}%"></div></div>
+      <div class="bar-val">${r[rateKey]}%</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+// ---------- Segments (toggle) ----------
+const segLabelKeys = {
+  by_job:'job', by_education:'education', by_marital:'marital', by_contact:'contact', by_age_group:'age_group'
+};
+const segTitles = {
+  by_job:'Subscription rate by job', by_education:'Subscription rate by education',
+  by_marital:'Subscription rate by marital status', by_contact:'Subscription rate by contact type',
+  by_age_group:'Subscription rate by age group'
+};
+function renderSegment(key){
+  document.getElementById('segTitle').textContent = segTitles[key];
+  renderBars('segChart', DATA[key], {labelKey: segLabelKeys[key]});
+}
+document.querySelectorAll('#segToggle .toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#segToggle .toggle').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderSegment(btn.dataset.seg);
+  });
+});
+renderSegment('by_job');
+
+// ---------- Timing ----------
+renderBars('monthChart', DATA.by_month, {labelKey:'month', gold:true});
+renderBars('dayChart', DATA.by_day, {labelKey:'day_of_week'});
+
+// ---------- History ----------
+renderBars('prevChart', DATA.by_prev_contacted, {labelKey:'was_previously_contacted', gold:true});
+renderBars('poutcomeChart', DATA.by_poutcome, {labelKey:'poutcome', gold:true});
+
+// ---------- Metrics table ----------
+(function(){
+  const t = document.getElementById('metricsTable');
+  const m = DATA.metrics;
+  t.innerHTML = `
+    <tr><th>Model</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th></tr>
+    <tr><td>Logistic Regression</td><td>${m.logreg.precision}</td><td>${m.logreg.recall}</td><td>${m.logreg.f1}</td><td>${m.logreg.auc}</td></tr>
+    <tr><td>Random Forest</td><td>${m.rf.precision}</td><td>${m.rf.recall}</td><td>${m.rf.f1}</td><td>${m.rf.auc}</td></tr>
+  `;
+})();
+
+// ---------- Confusion matrix (Random Forest) ----------
+(function(){
+  const c = DATA.confusion.rf;
+  const wrap = document.getElementById('cmWrap');
+  wrap.innerHTML = `
+    <div class="cm-block">
+      <div class="cm-label" style="margin-bottom:8px;">Random Forest — predicted vs. actual</div>
+      <div class="cm-axis-top">
+        <div class="corner"></div>
+        <div class="col-lab">Predicted&nbsp;no</div>
+        <div class="col-lab">Predicted&nbsp;yes</div>
+      </div>
+      <div class="cm-row">
+        <div class="cm-row-lab">Actual&nbsp;no</div>
+        <div class="cm-cell tn"><div class="n">${c.tn}</div><div class="cm-cell-lab">True “no”</div></div>
+        <div class="cm-cell fp"><div class="n">${c.fp}</div><div class="cm-cell-lab">False “yes”</div></div>
+      </div>
+      <div class="cm-row">
+        <div class="cm-row-lab">Actual&nbsp;yes</div>
+        <div class="cm-cell fn"><div class="n">${c.fn}</div><div class="cm-cell-lab">Missed “yes”</div></div>
+        <div class="cm-cell tp"><div class="n">${c.tp}</div><div class="cm-cell-lab">True “yes”</div></div>
+      </div>
+    </div>
+  `;
+})();
+
+// ---------- ROC curve (SVG) ----------
+(function(){
+  const svg = document.getElementById('rocSvg');
+  const W=280,H=240,PAD=28;
+  const x = v => PAD + v*(W-PAD-10);
+  const y = v => (H-PAD) - v*(H-PAD-10);
+  function pathFor(points){
+    return points.map((p,i) => (i===0?'M':'L') + x(p.fpr).toFixed(1) + ',' + y(p.tpr).toFixed(1)).join(' ');
+  }
+  let svgContent = `
+    <line x1="${x(0)}" y1="${y(0)}" x2="${x(1)}" y2="${y(0)}" stroke="#D9D2C2" stroke-width="1"/>
+    <line x1="${x(0)}" y1="${y(0)}" x2="${x(0)}" y2="${y(1)}" stroke="#D9D2C2" stroke-width="1"/>
+    <line x1="${x(0)}" y1="${y(0)}" x2="${x(1)}" y2="${y(1)}" stroke="#D9D2C2" stroke-width="1" stroke-dasharray="3,3"/>
+    <path d="${pathFor(DATA.roc.logreg)}" fill="none" stroke="#2F6B5E" stroke-width="2"/>
+    <path d="${pathFor(DATA.roc.rf)}" fill="none" stroke="#B8863B" stroke-width="2.4"/>
+    <text x="${x(0)}" y="${H-6}" font-family="IBM Plex Mono" font-size="9" fill="#8C8577">0</text>
+    <text x="${x(1)-14}" y="${H-6}" font-family="IBM Plex Mono" font-size="9" fill="#8C8577">FPR 1.0</text>
+    <text x="2" y="${y(1)+4}" font-family="IBM Plex Mono" font-size="9" fill="#8C8577">TPR 1.0</text>
+  `;
+  svg.innerHTML = svgContent;
+})();
+
+// ---------- Feature importance ----------
+renderBars('featChart', DATA.feature_importance.slice(0,6).map(f => ({feature:f.feature, pct: Math.round(f.importance*1000)/10})), {labelKey:'feature', rateKey:'pct', gold:true});
+
+// ---------- Simulator ----------
+const costSlider = document.getElementById('costSlider');
+const valueSlider = document.getElementById('valueSlider');
+const costVal = document.getElementById('costVal');
+const valueVal = document.getElementById('valueVal');
+
+function runSim(){
+  const cost = parseFloat(costSlider.value);
+  const value = parseFloat(valueSlider.value);
+  costVal.textContent = fmtINR(cost);
+  valueVal.textContent = fmtINR(value);
+
+  const cm = DATA.confusion.rf;
+  const totalTest = DATA.test_size;
+  const totalPositive = DATA.test_positive;
+
+  // Call everyone baseline
+  const callsAll = totalTest;
+  const convAll = totalPositive;
+  const netAll = convAll*value - callsAll*cost;
+
+  // Model-guided: only call those predicted "yes" (tp + fp)
+  const callsModel = cm.tp + cm.fp;
+  const convModel = cm.tp;
+  const netModel = convModel*value - callsModel*cost;
+
+  document.getElementById('simCallsAll').textContent = callsAll.toLocaleString('en-IN');
+  document.getElementById('simConvAll').textContent = convAll.toLocaleString('en-IN');
+  document.getElementById('simNetAll').textContent = fmtINR(netAll);
+  document.getElementById('simCallsModel').textContent = callsModel.toLocaleString('en-IN');
+  document.getElementById('simConvModel').textContent = convModel.toLocaleString('en-IN') + ' / ' + totalPositive;
+  document.getElementById('simNetModel').textContent = fmtINR(netModel);
+}
+costSlider.addEventListener('input', runSim);
+valueSlider.addEventListener('input', runSim);
+runSim();
+
+// ---------- Scrollspy for rail nav ----------
+const navLinks = document.querySelectorAll('#sectionNav a');
+const sections = Array.from(navLinks).map(a => document.querySelector(a.getAttribute('href')));
+function onScroll(){
+  let idx = 0;
+  const y = window.scrollY + 120;
+  sections.forEach((s,i) => { if(s && s.offsetTop <= y) idx = i; });
+  navLinks.forEach((a,i) => a.classList.toggle('active', i===idx));
+}
+window.addEventListener('scroll', onScroll);
+onScroll();
+</script>
+</body>
+</html>
